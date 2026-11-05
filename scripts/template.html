@@ -31,7 +31,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .pick .meta{flex:1;min-width:0}
 .pick .g{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .pick .t{font-weight:600;font-size:16px}
-.pick .chev{color:var(--muted);transition:transform .2s}
+.pick .chg{flex:none;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:600}.pick .chev{transition:transform .2s;font-size:11px}.pick:hover{border-color:#d9cfc8}.pick:hover .chg{background:var(--accent)}
 .picker.open .chev{transform:rotate(180deg)}
 .bar{height:3px;background:var(--soft);border-radius:3px;margin-top:6px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
@@ -118,7 +118,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .go{all:unset;cursor:pointer;display:block;margin:22px auto 0;padding:15px 38px;border-radius:999px;background:var(--accent);color:#fff;font-weight:600;letter-spacing:.06em;font-size:14px;box-shadow:0 10px 24px rgba(158,48,57,.28)}
 .go:active{transform:translateY(1px)}
 .sm{display:flex;justify-content:center;gap:10px;margin-top:12px}
-.about{margin-top:48px;color:var(--muted);font-size:13.5px;line-height:1.6}.about h2{font-size:14px;color:var(--ink);font-weight:600;margin:0 0 6px}.about a{color:var(--accent)}.by{margin-top:10px}
+.about{margin-top:48px;color:var(--muted);font-size:13.5px;line-height:1.6;text-align:center}.about h2{font-size:14px;color:var(--ink);font-weight:600;margin:0 0 6px}.about a{color:var(--accent)}.by{margin-top:10px}
 .note{font-size:12px;color:var(--muted);text-align:center;margin-top:18px}
 .note a{color:var(--muted)}
 </style>
@@ -130,7 +130,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 <section id="home"></section>
 <section id="modsView" hidden>
 <div class="picker" id="picker">
-  <button class="pick" id="pick"><span class="num" id="pNum"></span><span class="meta"><div class="g" id="pG"></div><div class="t" id="pT"></div><div class="bar"><i id="pBar"></i></div></span><span class="chev">▾</span></button>
+  <button class="pick" id="pick"><span class="num" id="pNum"></span><span class="meta"><div class="g" id="pG"></div><div class="t" id="pT"></div><div class="bar"><i id="pBar"></i></div></span><span class="chg">All modules <span class="chev">▾</span></span></button>
   <div class="menu" id="menu"><input id="q" placeholder="Search modules"><div id="items"></div></div>
 </div>
 <div class="tabs" id="tabs">
@@ -143,7 +143,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 <div class="panel" id="panel"></div>
 </section>
 <div class="note" id="note"></div>
-<footer class="about"><h2>Free Latvian for beginners</h2><p>Learn Latvian step by step with 120 short modules: the alphabet and pronunciation, greetings, numbers, documents and registering your address, renting a flat, shopping, the doctor, transport, work, study and everyday grammar. Every word and sentence has audio. Practise with a flip board, flashcards, quizzes, sentence building and writing. Made for expats, students and anyone new to Latvia.</p><p class="by">Made by <a href="https://rositirus.com">Rosi Tirus</a></p></footer>
+<footer class="about">Made with ♡ by Rosi Tirus, a fellow learner. <a href="https://ko-fi.com/rositirus" target="_blank" rel="noopener">☕ Buy me a kafija</a></footer>
 </main>
 <script>
 const M=__DATA__;
@@ -170,7 +170,7 @@ const spk=t=>`<button class="spk" data-say="${encodeURIComponent(t)}">${SPK}</bu
 document.addEventListener("click",e=>{const b=e.target.closest("[data-say]");if(b){e.stopPropagation();say(decodeURIComponent(b.dataset.say))}},true);
 function note(){}
 const ring=p=>`<svg class="ring" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="#efe9e4" stroke-width="3"/><circle cx="10" cy="10" r="8" fill="none" stroke="#9e3039" stroke-width="3" stroke-dasharray="${50.3*p} 50.3" transform="rotate(-90 10 10)" stroke-linecap="round"/></svg>`;
-function head(){const m=M[cur];$("pNum").textContent=cur+1;$("pG").textContent=m.g;$("pT").textContent=m.t;$("pBar").style.width=pct(cur)*100+"%";
+function head(){const m=M[cur];$("pNum").textContent=cur+1;$("pG").textContent="Module "+(cur+1)+" of "+M.length+" · "+m.g;$("pT").textContent=m.t;$("pBar").style.width=pct(cur)*100+"%";
  const tot=M.reduce((a,x)=>a+x.w.length,0),kn=M.reduce((a,x)=>a+x.w.filter(y=>box(y[0])>=3).length,0);$("stat").textContent=kn+" / "+tot+" words";}
 function items(){const q=$("q").value.toLowerCase();let h="",g="";M.forEach((m,i)=>{if(q&&!m.t.toLowerCase().includes(q)&&!m.g.toLowerCase().includes(q))return;if(m.g!==g){g=m.g;h+=`<h4>${g}</h4>`}h+=`<div class="item${i===cur?" on":""}" data-i="${i}"><span class="n">${i+1}</span><span class="tt">${m.t}</span>${ring(pct(i))}</div>`});$("items").innerHTML=h||'<div class="empty">No match</div>';}
 $("pick").onclick=e=>{e.stopPropagation();$("picker").classList.toggle("open");items();if($("picker").classList.contains("open")){$("q").value="";items();const on=$("items").querySelector(".on");on&&on.scrollIntoView({block:"center"})}};
