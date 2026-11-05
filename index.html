@@ -72,6 +72,12 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .list{text-align:left}
 .li{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .li:last-child{border:none}
+.li .ic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--soft);color:var(--muted);display:grid;place-items:center;transition:.15s}
+.li .ic svg{width:14px;height:14px}
+.li:hover .ic{background:var(--accent-soft);color:var(--accent)}
+.li.playing .ic{background:var(--accent);color:#fff}
+.li.playing .a{color:var(--accent)}
+.hintline{font-size:12px;color:var(--muted);text-align:left;margin:-6px 0 8px 4px}
 .li .a{flex:1;font-family:'Source Serif 4',Georgia,serif;font-size:17px}
 .li .b{color:var(--muted);text-align:right;font-size:14px;flex:1}
 .sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;margin:26px 0 4px}
@@ -130,7 +136,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 <section id="home"></section>
 <section id="modsView" hidden>
 <div class="picker" id="picker">
-  <button class="pick" id="pick"><span class="num" id="pNum"></span><span class="meta"><div class="g" id="pG"></div><div class="t" id="pT"></div><div class="bar"><i id="pBar"></i></div></span><span class="chg">All modules <span class="chev">▾</span></span></button>
+  <button class="pick" id="pick"><span class="num" id="pNum"></span><span class="meta"><div class="t" id="pT"></div><div class="bar"><i id="pBar"></i></div></span><span class="chg">All modules <span class="chev">▾</span></span></button>
   <div class="menu" id="menu"><input id="q" placeholder="Search modules"><div id="items"></div></div>
 </div>
 <div class="tabs" id="tabs">
@@ -167,10 +173,10 @@ function preload(t){clip(t)}
 function say(t){const a=clip(t);if(a){try{au.pause();au=a;a.currentTime=0;a.play().catch(()=>{})}catch(e){}return}if(!V)return;try{const u=new SpeechSynthesisUtterance(t.replace(/…/g,""));u.voice=V;u.lang=V.lang;u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 const SPK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 const spk=t=>`<button class="spk" data-say="${encodeURIComponent(t)}">${SPK}</button>`;
-document.addEventListener("click",e=>{const b=e.target.closest("[data-say]");if(b){e.stopPropagation();say(decodeURIComponent(b.dataset.say))}},true);
+document.addEventListener("click",e=>{const b=e.target.closest("[data-say]");if(b){e.stopPropagation();say(decodeURIComponent(b.dataset.say));if(b.classList.contains("li")){document.querySelectorAll(".li.playing").forEach(x=>x.classList.remove("playing"));b.classList.add("playing");const a=au;const end=()=>b.classList.remove("playing");a.onended=end;setTimeout(end,4000)}}},true);
 function note(){}
 const ring=p=>`<svg class="ring" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="#efe9e4" stroke-width="3"/><circle cx="10" cy="10" r="8" fill="none" stroke="#9e3039" stroke-width="3" stroke-dasharray="${50.3*p} 50.3" transform="rotate(-90 10 10)" stroke-linecap="round"/></svg>`;
-function head(){const m=M[cur];$("pNum").textContent=cur+1;$("pG").textContent="Module "+(cur+1)+" of "+M.length+" · "+m.g;$("pT").textContent=m.t;$("pBar").style.width=pct(cur)*100+"%";
+function head(){const m=M[cur];$("pNum").textContent=cur+1;$("pT").textContent=m.t;$("pBar").style.width=pct(cur)*100+"%";
  const tot=M.reduce((a,x)=>a+x.w.length,0),kn=M.reduce((a,x)=>a+x.w.filter(y=>box(y[0])>=3).length,0);$("stat").textContent=kn+" / "+tot+" words";}
 function items(){const q=$("q").value.toLowerCase();let h="",g="";M.forEach((m,i)=>{if(q&&!m.t.toLowerCase().includes(q)&&!m.g.toLowerCase().includes(q))return;if(m.g!==g){g=m.g;h+=`<h4>${g}</h4>`}h+=`<div class="item${i===cur?" on":""}" data-i="${i}"><span class="n">${i+1}</span><span class="tt">${m.t}</span>${ring(pct(i))}</div>`});$("items").innerHTML=h||'<div class="empty">No match</div>';}
 $("pick").onclick=e=>{e.stopPropagation();$("picker").classList.toggle("open");items();if($("picker").classList.contains("open")){$("q").value="";items();const on=$("items").querySelector(".on");on&&on.scrollIntoView({block:"center"})}};
@@ -180,8 +186,8 @@ $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;mode=b.dat
 const P=h=>$("panel").innerHTML=h;
 function render(){ensure(cur).then(()=>{({list,flash,quiz,build,write})[mode]()})}
 const dots=w=>`<span class="dots">${[1,2,3,4,5].map(i=>`<i class="${box(w)>=i?"f":""}"></i>`).join("")}</span>`;
-function list(){const r=a=>a.map(c=>`<div class="li" data-say="${encodeURIComponent(c[0])}"><span class="a">${esc(c[0])}</span><span class="b">${esc(c[1])}</span></div>`).join("");
- P(`<div class="list">${r(W())}${SN().length?`<div class="sec">Sentences</div>`+r(SN()):""}</div>`)}
+function list(){const r=a=>a.map(c=>`<div class="li" data-say="${encodeURIComponent(c[0])}"><span class="ic">${SPK}</span><span class="a">${esc(c[0])}</span><span class="b">${esc(c[1])}</span></div>`).join("");
+ P(`<div class="hintline">Tap a word to hear it</div><div class="list">${r(W())}${SN().length?`<div class="sec">Sentences</div>`+r(SN()):""}</div>`)}
 function flash(){const c=pick();P(`<div class="top"><span>Tap card to flip</span>${dots(c[0])}</div><div class="flip" id="f"><div class="in"><div class="face"><div class="big">${esc(c[0])}</div></div><div class="face b"><div><div class="big" style="font-size:26px">${esc(c[1])}</div><div class="en lv" style="margin-top:8px">${esc(c[0])}</div></div></div></div></div><div class="row" id="r">${spk(c[0])}</div>`);
  say(c[0]);let fl=false;$("f").onclick=()=>{$("f").classList.toggle("on");if(!fl){fl=true;$("r").innerHTML=`<button class="btn" id="no">Again</button><button class="btn p" id="yes">Got it</button>${spk(c[0])}`;$("no").onclick=()=>{grade(c[0],false);flash()};$("yes").onclick=()=>{grade(c[0],true);flash()}}}}
 function quiz(){const c=pick(),rev=Math.random()<.5,all=M.flatMap(m=>m.w);const seen=new Set([c[0],c[1]]);let w=[];for(const x of [...W()].sort(()=>Math.random()-.5)){if(w.length>2)break;if(!seen.has(x[0])&&!seen.has(x[1])){w.push(x);seen.add(x[0]);seen.add(x[1])}}
